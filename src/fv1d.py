@@ -1,10 +1,12 @@
+import time
+
 import numpy
+import matplotlib.pyplot as plot
 
 import set_mesh 
 import core
 import riemann_solvers as rs
 
-import matplotlib.pyplot as plot
 
 # Problem specification
 problem = "sod"
@@ -33,6 +35,7 @@ rho, momentum, E, P, u, cx, tend, dx = set_mesh.set_mesh(
     invert=invert
 )
 
+time1 = time.perf_counter()
 core.main_loop(
     rho,
     P,
@@ -46,6 +49,9 @@ core.main_loop(
     gamma=gamma,
     model=riemann_solver
 )
+time2 = time.perf_counter()
+
+print("\nTime in main loop = {}s".format(time2 - time1))
 
 ein = numpy.zeros(len(rho))
 for i in range(len(rho)):
@@ -58,84 +64,3 @@ plot.title(r"$\rho$")
 plot.xlabel("x (cm)")
 
 plot.savefig("test.png")
-    
-
-# results[flux] = {
-#     "X": copy.deepcopy(cx),
-#     "RHO": copy.deepcopy(rho),
-#     "P": copy.deepcopy(P),
-#     "E": copy.deepcopy(E),
-#     "EIN": copy.deepcopy(ein),
-#     "U": copy.deepcopy(u),
-#     }
-
-# # Random Choice method uses bespoke main loop
-# rho, momentum, E, P, u, cx, tend, dx = set_mesh.set_mesh(
-#     "sod",
-#     gamma=1.4,
-#     L=1.0,
-#     x0=0.5,
-#     ncells=ncells,
-#     invert=False
-# )
-# main_loop.main_loop_rcm(
-#     rho,
-#     P,
-#     u,
-#     E,
-#     tend,
-#     0.1,
-#     dx,
-#     gamma=1.4
-# )
-
-# results["Random Choice Method"] = {
-#     "X": copy.deepcopy(cx),
-#     "RHO": copy.deepcopy(rho),
-#     "P": copy.deepcopy(P),
-#     "E": copy.deepcopy(E),
-#     "EIN": copy.deepcopy(ein),
-#     "U": copy.deepcopy(u),
-#     }
-
-# rhoL, uL, PL, rhoR, uR, PR, name = set_mesh.get_initial("sod")
-
-# x, exact = riemann.exact(uL, uR, rhoL, rhoR, PL, PR, t=tend, diaphram=0.5)
-
-# s = 2
-
-# fig = plot.figure(figsize=(image_size, image_size))
-# plot.subplots_adjust(hspace=0.7)
-
-# axes = fig.add_subplot(221)
-# plot.plot(x, exact.rho, "k", label="Exact (iterative Riemann solve)")
-# for flux in results.keys():
-#     plot.scatter(results[flux]["X"], results[flux]["RHO"], s=s, label=flux)
-# plot.title(r"$\rho$")
-# plot.xlabel("x (cm)")
-    
-# axes = fig.add_subplot(224)
-# plot.plot(x, exact.E, "k")
-# for flux in results.keys():
-#     plot.scatter(results[flux]["X"], results[flux]["EIN"], s=s)
-# plot.title(r"Internal Energy")
-# plot.xlabel("x (cm)")
-
-# axes = fig.add_subplot(222)
-# plot.plot(x, exact.u, "k")
-# for flux in results.keys():
-#     plot.scatter(results[flux]["X"], results[flux]["U"], s=s)
-# plot.title(r"Velocity")
-# plot.xlabel("x (cm)")
-
-# axes = fig.add_subplot(223)
-# plot.plot(x, exact.P, "k")
-# for flux in results.keys():
-#     plot.scatter(results[flux]["X"], results[flux]["P"], s=s)
-# plot.title(r"Pressure")
-# plot.xlabel("x (cm)")
-
-    
-# fig.legend(loc=0)
-
-# plot.savefig("sod.png")

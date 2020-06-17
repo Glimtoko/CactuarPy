@@ -24,45 +24,44 @@ def main_loop(
         numpy.ndarray[DTYPE_t, ndim=1] u,
         numpy.ndarray[DTYPE_t, ndim=1] E,
         numpy.ndarray[DTYPE_t, ndim=1] momentum,
-        tend,
-        dtmax,
-        dx,
+        double tend,
+        double dtmax,
+        double dx,
         flux_function,
-        gamma=1.4,
-        model=rs.riemann_iterative
+        double gamma=1.4,
+        model=rs.riemann_iterative,
+        double cfl=0.6
 ):
     ncells = len(P) - 2
-    
-    F = [None]*(ncells+2)
+        
+    cdef numpy.ndarray[DTYPE_t, ndim=1] rho_f = numpy.zeros(ncells+2, float)
+    cdef numpy.ndarray[DTYPE_t, ndim=1] mom_f = numpy.zeros(ncells+2, float)
+    cdef numpy.ndarray[DTYPE_t, ndim=1] E_f = numpy.zeros(ncells+2, float)
     
     # Main loop
-    t = 0.0
-    step = 1
+    cdef double t = 0.0
+    cdef int step = 1
+    cdef double S, dt, f
     while True:
         S = 0
         for i in range(1, ncells+1):
             a = math.sqrt((gamma*P[i])/rho[i])
             S = max(S, a + u[i])
             
-        dt = min(dtmax, 0.6*dx/S)
+        dt = min(dtmax, cfl*dx/S)
         
         print("step: {0:4d}, t = {1:6.4f}, dt = {2:8.6e}".format(step, t, dt))
                    
         for i in range(1, ncells+2):
-            F[i] = flux_function(u[i-1], rho[i-1], P[i-1], u[i], rho[i], P[i], gamma, model)
-     
+            rho_f[i], mom_f[i], E_f[i] = flux_function(u[i-1], rho[i-1], P[i-1], u[i], rho[i], P[i], gamma, model)
+                
         f = dt/dx
         
-        for i in range(1, ncells+1):
-            momL = F[i].mom
-            momR = F[i+1].mom
-            EL = F[i].E
-            ER = F[i+1].E
-                  
+        for i in range(1, ncells+1):                 
             # Conservative update
-            rho[i] += f*(F[i].rho - F[i+1].rho)
-            momentum[i] += f*(momL - momR)
-            E[i] += f*(EL - ER)
+            rho[i] += f*(rho_f[i] - rho_f[i+1])
+            momentum[i] += f*(mom_f[i] - mom_f[i+1])
+            E[i] += f*(E_f[i] - E_f[i+1])
             
             # Primative update
             P[i] = (gamma - 1.0)*(E[i] - 0.5*rho[i]*u[i]*u[i])

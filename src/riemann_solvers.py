@@ -131,7 +131,7 @@ def solve(uL, rhoL, PL, uR, rhoR, PR, x, t, gamma=1.4, model=riemann_iterative):
     e = Pxp/((gamma - 1.0)*rhoxp)
     Exp = rhoxp * (0.5*uxp*uxp + e)
     
-    return solution(rhoxp, Pxp, uxp, Exp)
+    return rhoxp, Pxp, uxp, Exp
 
 
 def exact(uL, uR, rhoL, rhoR, PL, PR, t, gamma=1.4, xL=0.0, xR=1.0, diaphram=0.5, dx=0.001):

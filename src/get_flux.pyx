@@ -2,89 +2,74 @@ import math
 import riemann_solvers as riemann
 
 
-class Flux:
-    def __init__(self, rho, mom, E):
-        self.rho = rho
-        self.mom = mom
-        self.E = E 
-
-
 def get_flux_fvs_SW(uL, rhoL, PL, uR, rhoR, PR, gamma=1.4, model=None):
-    aL =  math.sqrt((gamma*PL)/rhoL)
-    HL = 0.5*(uL*uL) + (aL*aL)/(gamma - 1.0)
+    cdef double aL =  math.sqrt((gamma*PL)/rhoL)
+    cdef double HL = 0.5*(uL*uL) + (aL*aL)/(gamma - 1.0)
 
-    aR =  math.sqrt((gamma*PR)/rhoR)
-    HR = 0.5*(uR*uR) + (aR*aR)/(gamma - 1.0)
+    cdef double aR =  math.sqrt((gamma*PR)/rhoR)
+    cdef double HR = 0.5*(uR*uR) + (aR*aR)/(gamma - 1.0)
     
-    l1L = uL - aL
-    l2L = uL
-    l3L = uL + aL
+    cdef double l1L = uL - aL
+    cdef double l2L = uL
+    cdef double l3L = uL + aL
 
-    l1R = uR - aR
-    l2R = uR
-    l3R = uR + aR
+    cdef double l1R = uR - aR
+    cdef double l2R = uR
+    cdef double l3R = uR + aR
 
-    l1p = 0.5*(l1L + abs(l1L))
-    l1m = 0.5*(l1R - abs(l1R))
-    l2p = 0.5*(l2L + abs(l2L))
-    l2m = 0.5*(l2R - abs(l2R))
-    l3p = 0.5*(l3L + abs(l3L))
-    l3m = 0.5*(l3R - abs(l3R))
+    cdef double l1p = 0.5*(l1L + abs(l1L))
+    cdef double l1m = 0.5*(l1R - abs(l1R))
+    cdef double l2p = 0.5*(l2L + abs(l2L))
+    cdef double l2m = 0.5*(l2R - abs(l2R))
+    cdef double l3p = 0.5*(l3L + abs(l3L))
+    cdef double l3m = 0.5*(l3R - abs(l3R))
     
-    fL = rhoL/(2.0*gamma)
-    fR = rhoR/(2.0*gamma)
+    cdef double fL = rhoL/(2.0*gamma)
+    cdef double fR = rhoR/(2.0*gamma)
     
-    rho_fluxp = fL*(l1p + 2.0*(gamma - 1.0)*l2p + l3p)
-    rho_fluxm = fR*(l1m + 2.0*(gamma - 1.0)*l2m + l3m)
+    cdef double rho_fluxp = fL*(l1p + 2.0*(gamma - 1.0)*l2p + l3p)
+    cdef double rho_fluxm = fR*(l1m + 2.0*(gamma - 1.0)*l2m + l3m)
     
-    mom_fluxp = fL*((uL - aL)*l1p + 2.0*(gamma - 1.0)*uL*l2p + (uL + aL)*l3p)
-    mom_fluxm = fR*((uR - aR)*l1m + 2.0*(gamma - 1.0)*uR*l2m + (uR + aR)*l3m)
+    cdef double mom_fluxp = fL*((uL - aL)*l1p + 2.0*(gamma - 1.0)*uL*l2p + (uL + aL)*l3p)
+    cdef double mom_fluxm = fR*((uR - aR)*l1m + 2.0*(gamma - 1.0)*uR*l2m + (uR + aR)*l3m)
     
-    E_fluxp = fL*((HL - uL*aL)*l1p + (gamma - 1.0)*uL*uL*l2p + (HL + uL*aL)*l3p)
-    E_fluxm = fR*((HR - uR*aR)*l1m + (gamma - 1.0)*uR*uR*l2m + (HR + uR*aR)*l3m)
+    cdef double E_fluxp = fL*((HL - uL*aL)*l1p + (gamma - 1.0)*uL*uL*l2p + (HL + uL*aL)*l3p)
+    cdef double E_fluxm = fR*((HR - uR*aR)*l1m + (gamma - 1.0)*uR*uR*l2m + (HR + uR*aR)*l3m)
     
-    return Flux(
-        rho_fluxp + rho_fluxm,
-        mom_fluxp + mom_fluxm,
-        E_fluxp + E_fluxm
-        )
+    return rho_fluxp + rho_fluxm, mom_fluxp + mom_fluxm, E_fluxp + E_fluxm
 
 
 def get_flux_fvs_VL(uL, rhoL, PL, uR, rhoR, PR, gamma=1.4, model=None):
-    aL =  math.sqrt((gamma*PL)/rhoL)
-    ML = uL/aL
+    cdef double aL =  math.sqrt((gamma*PL)/rhoL)
+    cdef double ML = uL/aL
 
-    aR =  math.sqrt((gamma*PR)/rhoR)
-    MR = uR/aR
+    cdef double aR =  math.sqrt((gamma*PR)/rhoR)
+    cdef double MR = uR/aR
     
-    fp = 0.25*rhoL*aL*(1.0 + ML)**2
-    fm = -0.25*rhoR*aR*(1.0 - MR)**2
-    fg = ((gamma - 1.0)/2.0)
+    cdef double fp = 0.25*rhoL*aL*(1.0 + ML)**2
+    cdef double fm = -0.25*rhoR*aR*(1.0 - MR)**2
+    cdef double fg = ((gamma - 1.0)/2.0)
     
-    rho_fluxp = fp
-    rho_fluxm = fm
+    cdef double rho_fluxp = fp
+    cdef double rho_fluxm = fm
     
-    mom_fluxp = fp*( ((2.0*aL)/gamma) * (fg*ML + 1.0) )
-    mom_fluxm = fm*( ((2.0*aR)/gamma) * (fg*MR - 1.0) )
+    cdef double mom_fluxp = fp*( ((2.0*aL)/gamma) * (fg*ML + 1.0) )
+    cdef double mom_fluxm = fm*( ((2.0*aR)/gamma) * (fg*MR - 1.0) )
     
-    E_fluxp = fp*( (2.0*aL*aL)/(gamma*gamma - 1.0) * (fg*ML + 1.0)**2)
-    E_fluxm = fm*( (2.0*aR*aR)/(gamma*gamma - 1.0) * (fg*MR - 1.0)**2)
+    cdef double E_fluxp = fp*( (2.0*aL*aL)/(gamma*gamma - 1.0) * (fg*ML + 1.0)**2)
+    cdef double E_fluxm = fm*( (2.0*aR*aR)/(gamma*gamma - 1.0) * (fg*MR - 1.0)**2)
 
-    return Flux(
-        rho_fluxp + rho_fluxm,
-        mom_fluxp + mom_fluxm,
-        E_fluxp + E_fluxm
-        )
+    return rho_fluxp + rho_fluxm, mom_fluxp + mom_fluxm, E_fluxp + E_fluxm
 
 
 def get_flux_Godunov(uL, rhoL, PL, uR, rhoR, PR, gamma=1.4, model=riemann.riemann_iterative):   
-    W = riemann.solve(uL, rhoL, PL, uR, rhoR, PR, 0.0, 1.0, gamma, model)
+    rho, P, u, E = riemann.solve(uL, rhoL, PL, uR, rhoR, PR, 0.0, 1.0, gamma, model)
             
-    f_rho = W.rho*W.u
-    f_mom = W.rho*W.u*W.u + W.P
-    f_E = W.u*(W.E + W.P)
+    cdef double f_rho = rho*u
+    cdef double f_mom = rho*u*u + P
+    cdef double f_E = u*(E + P)
     
-    return Flux(f_rho, f_mom, f_E)
+    return f_rho, f_mom, f_E
 
 
 def get_flux_HLLC(uL, rhoL, PL, uR, rhoR, PR, gamma=1.4, model=None):
@@ -171,4 +156,4 @@ def get_flux_HLLC(uL, rhoL, PL, uR, rhoR, PR, gamma=1.4, model=None):
         f_mom = rhoR*uR*uR + PR
         f_E = uR*(ER + PR)
         
-    return Flux(f_rho, f_mom, f_E)
+    return f_rho, f_mom, f_E
