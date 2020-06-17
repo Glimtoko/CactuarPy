@@ -5,8 +5,6 @@ import matplotlib.pyplot as plot
 
 import set_mesh 
 import core
-import riemann_solvers as rs
-
 
 # Problem specification
 problem = "sod"
@@ -22,8 +20,8 @@ length = 1.0
 interface_position = 0.5
 
 # Solver settings
-flux_function = core.get_flux_HLLC
-riemann_solver = None
+flux_function = core.get_flux_Godunov
+riemann_solver = core.riemann_iterative
 
 
 rho, momentum, E, P, u, cx, tend, dx = set_mesh.set_mesh(

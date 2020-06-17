@@ -1,12 +1,25 @@
 import math
-import riemann_solvers as riemann
+#import riemann_solvers as riemann
 
+cimport cython
+from libc.math cimport sqrt
 
-def get_flux_fvs_SW(uL, rhoL, PL, uR, rhoR, PR, gamma=1.4, model=None):
-    cdef double aL =  math.sqrt((gamma*PL)/rhoL)
+@cython.cdivision(True)
+def get_flux_fvs_SW(
+        double uL,
+        double rhoL,
+        double PL,
+        double uR,
+        double rhoR,
+        double PR,
+        double gamma=1.4,
+        model=None
+        
+):
+    cdef double aL = sqrt((gamma*PL)/rhoL)
     cdef double HL = 0.5*(uL*uL) + (aL*aL)/(gamma - 1.0)
 
-    cdef double aR =  math.sqrt((gamma*PR)/rhoR)
+    cdef double aR = sqrt((gamma*PR)/rhoR)
     cdef double HR = 0.5*(uR*uR) + (aR*aR)/(gamma - 1.0)
     
     cdef double l1L = uL - aL
@@ -36,14 +49,28 @@ def get_flux_fvs_SW(uL, rhoL, PL, uR, rhoR, PR, gamma=1.4, model=None):
     cdef double E_fluxp = fL*((HL - uL*aL)*l1p + (gamma - 1.0)*uL*uL*l2p + (HL + uL*aL)*l3p)
     cdef double E_fluxm = fR*((HR - uR*aR)*l1m + (gamma - 1.0)*uR*uR*l2m + (HR + uR*aR)*l3m)
     
-    return rho_fluxp + rho_fluxm, mom_fluxp + mom_fluxm, E_fluxp + E_fluxm
+    cdef (double, double, double) flux
+    flux = (rho_fluxp + rho_fluxm, mom_fluxp + mom_fluxm, E_fluxp + E_fluxm)
+    
+    return flux
 
 
-def get_flux_fvs_VL(uL, rhoL, PL, uR, rhoR, PR, gamma=1.4, model=None):
-    cdef double aL =  math.sqrt((gamma*PL)/rhoL)
+@cython.cdivision(True)
+def get_flux_fvs_VL(
+        double uL,
+        double rhoL,
+        double PL,
+        double uR,
+        double rhoR,
+        double PR,
+        double gamma=1.4,
+        model=None
+        
+):
+    cdef double aL = sqrt((gamma*PL)/rhoL)
     cdef double ML = uL/aL
 
-    cdef double aR =  math.sqrt((gamma*PR)/rhoR)
+    cdef double aR = sqrt((gamma*PR)/rhoR)
     cdef double MR = uR/aR
     
     cdef double fp = 0.25*rhoL*aL*(1.0 + ML)**2
@@ -59,23 +86,51 @@ def get_flux_fvs_VL(uL, rhoL, PL, uR, rhoR, PR, gamma=1.4, model=None):
     cdef double E_fluxp = fp*( (2.0*aL*aL)/(gamma*gamma - 1.0) * (fg*ML + 1.0)**2)
     cdef double E_fluxm = fm*( (2.0*aR*aR)/(gamma*gamma - 1.0) * (fg*MR - 1.0)**2)
 
-    return rho_fluxp + rho_fluxm, mom_fluxp + mom_fluxm, E_fluxp + E_fluxm
+    cdef (double, double, double) flux
+    flux = (rho_fluxp + rho_fluxm, mom_fluxp + mom_fluxm, E_fluxp + E_fluxm)
+    
+    return flux
 
 
-def get_flux_Godunov(uL, rhoL, PL, uR, rhoR, PR, gamma=1.4, model=riemann.riemann_iterative):   
-    rho, P, u, E = riemann.solve(uL, rhoL, PL, uR, rhoR, PR, 0.0, 1.0, gamma, model)
+@cython.cdivision(True)
+def get_flux_Godunov(
+        double uL,
+        double rhoL,
+        double PL,
+        double uR,
+        double rhoR,
+        double PR,
+        double gamma=1.4,
+        model=riemann_iterative
+        
+):
+    cdef double rho, P, u, E
+    rho, P, u, E = solve(uL, rhoL, PL, uR, rhoR, PR, 0.0, 1.0, gamma, model)
             
     cdef double f_rho = rho*u
     cdef double f_mom = rho*u*u + P
     cdef double f_E = u*(E + P)
     
-    return f_rho, f_mom, f_E
+    cdef (double, double, double) flux = (f_rho, f_mom, f_E)
+    
+    return flux
 
 
-def get_flux_HLLC(uL, rhoL, PL, uR, rhoR, PR, gamma=1.4, model=None):
+@cython.cdivision(True)
+def get_flux_HLLC(
+        double uL,
+        double rhoL,
+        double PL,
+        double uR,
+        double rhoR,
+        double PR,
+        double gamma=1.4,
+        model=None
+        
+):
     # Pressure estimate from PVRS solver
-    cdef double aL = math.sqrt((gamma*PL)/rhoL)
-    cdef double aR = math.sqrt((gamma*PR)/rhoR)
+    cdef double aL = sqrt((gamma*PL)/rhoL)
+    cdef double aR = sqrt((gamma*PR)/rhoR)
     
     cdef double rho_bar = 0.5*(rhoL + rhoR)
     cdef double a_bar = 0.5*(aL + aR)
@@ -86,12 +141,12 @@ def get_flux_HLLC(uL, rhoL, PL, uR, rhoR, PR, gamma=1.4, model=None):
     if Pguess <= PL:
         qL = 1.0
     else:
-        qL = math.sqrt(1.0 + (gamma + 1.0)/(2.0*gamma)*(Pguess/PL - 1.0))
+        qL = sqrt(1.0 + (gamma + 1.0)/(2.0*gamma)*(Pguess/PL - 1.0))
         
     if Pguess <= PR:
         qR = 1.0
     else:
-        qR = math.sqrt(1.0 + (gamma + 1.0)/(2.0*gamma)*(Pguess/PR - 1.0))
+        qR = sqrt(1.0 + (gamma + 1.0)/(2.0*gamma)*(Pguess/PR - 1.0))
     
     # Estimate wave speeds
     cdef double SL = uL - aL*qL
@@ -156,4 +211,6 @@ def get_flux_HLLC(uL, rhoL, PL, uR, rhoR, PR, gamma=1.4, model=None):
         f_mom = rhoR*uR*uR + PR
         f_E = uR*(ER + PR)
         
-    return f_rho, f_mom, f_E
+    cdef (double, double, double) flux = (f_rho, f_mom, f_E)
+    
+    return flux

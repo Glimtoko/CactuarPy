@@ -1,11 +1,11 @@
 import math
 import sys
-import riemann_solvers as rs
-
 import numpy
 
 cimport numpy
 cimport cython
+
+from libc.math cimport sqrt
 
 
 # Data types
@@ -18,6 +18,7 @@ ctypedef numpy.int_t ITYPE_t
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+@cython.cdivision(True)
 def main_loop(
         numpy.ndarray[DTYPE_t, ndim=1] rho,
         numpy.ndarray[DTYPE_t, ndim=1] P,
@@ -29,23 +30,24 @@ def main_loop(
         double dx,
         flux_function,
         double gamma=1.4,
-        model=rs.riemann_iterative,
+        model=riemann_iterative,
         double cfl=0.6
 ):
-    ncells = len(P) - 2
+    cdef int ncells = len(P) - 2
         
     cdef numpy.ndarray[DTYPE_t, ndim=1] rho_f = numpy.zeros(ncells+2, float)
     cdef numpy.ndarray[DTYPE_t, ndim=1] mom_f = numpy.zeros(ncells+2, float)
     cdef numpy.ndarray[DTYPE_t, ndim=1] E_f = numpy.zeros(ncells+2, float)
-    
+       
     # Main loop
     cdef double t = 0.0
     cdef int step = 1
-    cdef double S, dt, f
+    cdef double S, dt, f, a
+    cdef int i
     while True:
         S = 0
         for i in range(1, ncells+1):
-            a = math.sqrt((gamma*P[i])/rho[i])
+            a = sqrt((gamma*P[i])/rho[i])
             S = max(S, a + u[i])
             
         dt = min(dtmax, cfl*dx/S)
@@ -53,7 +55,11 @@ def main_loop(
         print("step: {0:4d}, t = {1:6.4f}, dt = {2:8.6e}".format(step, t, dt))
                    
         for i in range(1, ncells+2):
-            rho_f[i], mom_f[i], E_f[i] = flux_function(u[i-1], rho[i-1], P[i-1], u[i], rho[i], P[i], gamma, model)
+            rho_f[i], mom_f[i], E_f[i] = flux_function(
+                u[i-1], rho[i-1], P[i-1],
+                u[i], rho[i], P[i],
+                gamma,
+                model)
                 
         f = dt/dx
         
