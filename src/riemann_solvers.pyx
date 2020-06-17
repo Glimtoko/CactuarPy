@@ -1,7 +1,7 @@
 import math
 import sys
 
-import riemann_sampler as rs
+#import riemann_sampler as rs
 #import riemann_exact as re
 
 cimport cython
@@ -194,9 +194,9 @@ def solve(
     
     cdef double rhoxp, Pxp, uxp
     if model == riemann_iterative:
-        rhoxp, Pxp, uxp = rs.sample_exact(Pstar, ustar, x, t, uL, rhoL, PL, uR, rhoR, PR, gamma)
+        rhoxp, Pxp, uxp = sample_exact(Pstar, ustar, x, t, uL, rhoL, PL, uR, rhoR, PR, gamma)
     else:
-        rhoxp, Pxp, uxp = rs.sample_approx(Pstar, ustar, rhoLstar, rhoRstar, uL, rhoL, PL, uR, rhoR, PR, gamma)
+        rhoxp, Pxp, uxp = sample_approx(Pstar, ustar, rhoLstar, rhoRstar, uL, rhoL, PL, uR, rhoR, PR, gamma)
     
     cdef double e = Pxp/((gamma - 1.0)*rhoxp)
     cdef double Exp = rhoxp * (0.5*uxp*uxp + e)

@@ -1,3 +1,4 @@
+include "riemann_sampler.pyx"
 include "riemann_exact.pyx"
 include "riemann_solvers.pyx"
 include "get_flux.pyx"

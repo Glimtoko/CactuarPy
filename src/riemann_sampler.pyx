@@ -1,37 +1,43 @@
-import math
-
-class solution():
-    def __init__(self, rho, P, u, E):
-        self.rho = rho
-        self.P = P
-        self.u = u
-        self.E = E
+cimport cython
+from libc.math cimport sqrt
 
 
-def rhostar_shock(P, Pk, rhok, gamma):
+@cython.cdivision(True)
+cdef double rhostar_shock(double P, double Pk, double rhok, double gamma):
     f = (gamma - 1.0)/(gamma + 1.0)
     
     return rhok * (P/Pk + f) / (f*P/Pk + 1.0)
 
 
-def SL_shock(P, Pk, rhok, uk, gamma):
-    ak = math.sqrt((gamma*Pk)/rhok)
+@cython.cdivision(True)
+cdef double SL_shock(double P, double Pk, double rhok, double uk, double gamma):
+    ak = sqrt((gamma*Pk)/rhok)
     
     return uk - ak*((gamma + 1.0)/(2.0*gamma)*(P/Pk) + (gamma - 1.0)/(2.0*gamma))**0.5
 
 
-def SR_shock(P, Pk, rhok, uk, gamma):
-    ak = math.sqrt((gamma*Pk)/rhok)
+@cython.cdivision(True)
+cdef double SR_shock(double P, double Pk, double rhok, double uk, double gamma):
+    ak = sqrt((gamma*Pk)/rhok)
     
     return uk + ak*((gamma + 1.0)/(2.0*gamma)*(P/Pk) + (gamma - 1.0)/(2.0*gamma))**0.5
 
 
-def rhostar_rarefaction(P, Pk, rhok, gamma):
+@cython.cdivision(True)
+cdef double rhostar_rarefaction(double P, double Pk, double rhok, double gamma):
     return rhok * (P/Pk)**(1.0/gamma)
 
 
-def rhoLfan_rarefaction(P, PL, rhoL, uL, gamma, S):
-    aL = math.sqrt((gamma*PL)/rhoL)
+@cython.cdivision(True)
+cdef (double, double, double) rhoLfan_rarefaction(
+    double P,
+    double PL,
+    double rhoL,
+    double uL,
+    double gamma,
+    double S
+):
+    aL = sqrt((gamma*PL)/rhoL)
     f = (2*gamma)/(gamma - 1.0)
     
     rho = rhoL*(2.0/(gamma + 1.0) + (gamma - 1.0)/((gamma + 1.0)*aL)*(uL - S))**(2/(gamma - 1.0))
@@ -41,8 +47,16 @@ def rhoLfan_rarefaction(P, PL, rhoL, uL, gamma, S):
     return rho, P, u
 
 
-def rhoRfan_rarefaction(P, PR, rhoR, uR, gamma, S):
-    aR = math.sqrt((gamma*PR)/rhoR)
+@cython.cdivision(True)
+cdef (double, double, double) rhoRfan_rarefaction(
+    double P,
+    double PR,
+    double rhoR,
+    double uR,
+    double gamma,
+    double S
+):
+    aR = sqrt((gamma*PR)/rhoR)
     f = 2*gamma/(gamma - 1.0)
     
     rho = rhoR*(2.0/(gamma + 1.0) - (gamma - 1.0)/((gamma + 1.0)*aR)*(uR - S))**(2/(gamma - 1.0))
@@ -52,7 +66,16 @@ def rhoRfan_rarefaction(P, PR, rhoR, uR, gamma, S):
     return rho, P, u
 
 
-def rhox_L_shock(P, PL, rhoL, uL, gamma, ustar, S):
+@cython.cdivision(True)
+cdef (double, double, double) rhox_L_shock(
+    double P,
+    double PL,
+    double rhoL,
+    double uL,
+    double gamma,
+    double ustar,
+    double S
+):
     SL = SL_shock(P, PL, rhoL, uL, gamma)
     if S <= SL:
         return rhoL, PL, uL
@@ -60,7 +83,16 @@ def rhox_L_shock(P, PL, rhoL, uL, gamma, ustar, S):
         return rhostar_shock(P, PL, rhoL, gamma), P, ustar
 
 
-def rhox_R_shock(P, PR, rhoR, uR, gamma, ustar, S):
+@cython.cdivision(True)
+cdef (double, double, double) rhox_R_shock(
+    double P,
+    double PR,
+    double rhoR,
+    double uR,
+    double gamma,
+    double ustar,
+    double S
+):
     SR = SR_shock(P, PR, rhoR, uR, gamma)
     if S >= SR:
         return rhoR, PR, uR
@@ -68,8 +100,17 @@ def rhox_R_shock(P, PR, rhoR, uR, gamma, ustar, S):
         return rhostar_shock(P, PR, rhoR, gamma), P, ustar
 
 
-def rhox_L_rarefaction(P, PL, rhoL, uL, gamma, ustar, S):
-    aL = math.sqrt((gamma*PL)/rhoL)
+@cython.cdivision(True)
+cdef (double, double, double) rhox_L_rarefaction(
+    double P,
+    double PL,
+    double rhoL,
+    double uL,
+    double gamma,
+    double ustar,
+    double S
+):
+    aL = sqrt((gamma*PL)/rhoL)
     astar = aL*(P/PL)**((gamma - 1.0)/(2.0*gamma))
     
     SHL = uL - aL
@@ -83,8 +124,17 @@ def rhox_L_rarefaction(P, PL, rhoL, uL, gamma, ustar, S):
         return rhostar_rarefaction(P, PL, rhoL, gamma), P, ustar
 
 
-def rhox_R_rarefaction(P, PR, rhoR, uR, gamma, ustar, S):
-    aR = math.sqrt((gamma*PR)/rhoR)
+@cython.cdivision(True)
+cdef (double, double, double) rhox_R_rarefaction(
+    double P,
+    double PR,
+    double rhoR,
+    double uR,
+    double gamma,
+    double ustar,
+    double S
+):
+    aR = sqrt((gamma*PR)/rhoR)
     astar = aR*(P/PR)**((gamma - 1.0)/(2.0*gamma))
     
     SHR = uR + aR
@@ -98,21 +148,52 @@ def rhox_R_rarefaction(P, PR, rhoR, uR, gamma, ustar, S):
         return rhostar_rarefaction(P, PR, rhoR, gamma), P, ustar
 
 
-def rhox_L(P, PL, rhoL, uL, gamma, ustar, S):
+@cython.cdivision(True)
+cdef (double, double, double) rhox_L(
+    double P,
+    double PL,
+    double rhoL,
+    double uL,
+    double gamma,
+    double ustar,
+    double S
+):
     if P > PL:
         return rhox_L_shock(P, PL, rhoL, uL, gamma, ustar, S)
     else:
         return rhox_L_rarefaction(P, PL, rhoL, uL, gamma, ustar, S)
 
 
-def rhox_R(P, PR, rhoR, uR, gamma, ustar, S):
+@cython.cdivision(True)
+cdef (double, double, double) rhox_R(
+    double P,
+    double PR,
+    double rhoR,
+    double uR,
+    double gamma,
+    double ustar,
+    double S
+):
     if P > PR:
         return rhox_R_shock(P, PR, rhoR, uR, gamma, ustar, S)
     else:
         return rhox_R_rarefaction(P, PR, rhoR, uR, gamma, ustar, S)
 
 
-def sample_exact(Pstar, ustar, x, t, uL, rhoL, PL, uR, rhoR, PR, gamma=1.4):
+@cython.cdivision(True)
+cdef (double, double, double) sample_exact(
+    double Pstar,
+    double ustar,
+    double x,
+    double t,
+    double uL,
+    double rhoL,
+    double PL,
+    double uR,
+    double rhoR,
+    double PR,
+    double gamma=1.4
+):
     S = x/t
     if S < ustar:
         rhox, Px, ux = rhox_L(Pstar, PL, rhoL, uL, gamma, ustar, S)
@@ -122,7 +203,20 @@ def sample_exact(Pstar, ustar, x, t, uL, rhoL, PL, uR, rhoR, PR, gamma=1.4):
     return rhox, Px, ux
 
 
-def sample_approx(Pstar, ustar, rhoLstar, rhoRstar, uL, rhoL, PL, uR, rhoR, PR, gamma=1.4):
+@cython.cdivision(True)
+cdef (double, double, double) sample_approx(
+    double Pstar,
+    double ustar,
+    double rhoLstar,
+    double rhoRstar,
+    double uL,
+    double rhoL,
+    double PL,
+    double uR,
+    double rhoR,
+    double PR,
+    double gamma=1.4
+):
     S = 0
     P = Pstar
     if S < ustar:
@@ -136,7 +230,7 @@ def sample_approx(Pstar, ustar, rhoLstar, rhoRstar, uL, rhoL, PL, uR, rhoR, PR, 
                 return rhoLstar, P, ustar
         else:
             # Rarefaction
-            aL = math.sqrt((gamma*PL)/rhoL)
+            aL = sqrt((gamma*PL)/rhoL)
             astar = aL*(P/PL)**((gamma - 1.0)/(2.0*gamma))
             
             SHL = uL - aL
@@ -161,7 +255,7 @@ def sample_approx(Pstar, ustar, rhoLstar, rhoRstar, uL, rhoL, PL, uR, rhoR, PR, 
             
         else:
             # Rarefaction
-            aR = math.sqrt((gamma*PR)/rhoR)
+            aR = sqrt((gamma*PR)/rhoR)
             astar = aR*(P/PR)**((gamma - 1.0)/(2.0*gamma))
             
             SHR = uR + aR
