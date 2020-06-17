@@ -89,14 +89,15 @@ def get_flux_Godunov(uL, rhoL, PL, uR, rhoR, PR, gamma=1.4, model=riemann.rieman
 
 def get_flux_HLLC(uL, rhoL, PL, uR, rhoR, PR, gamma=1.4, model=None):
     # Pressure estimate from PVRS solver
-    aL = math.sqrt((gamma*PL)/rhoL)
-    aR = math.sqrt((gamma*PR)/rhoR)
+    cdef double aL = math.sqrt((gamma*PL)/rhoL)
+    cdef double aR = math.sqrt((gamma*PR)/rhoR)
     
-    rho_bar = 0.5*(rhoL + rhoR)
-    a_bar = 0.5*(aL + aR)
+    cdef double rho_bar = 0.5*(rhoL + rhoR)
+    cdef double a_bar = 0.5*(aL + aR)
     
-    Pguess = 0.5*(PL + PR) - 0.5*(uR - uL)*(rho_bar*a_bar)
+    cdef double Pguess = 0.5*(PL + PR) - 0.5*(uR - uL)*(rho_bar*a_bar)
     
+    cdef double qL
     if Pguess <= PL:
         qL = 1.0
     else:
@@ -108,20 +109,24 @@ def get_flux_HLLC(uL, rhoL, PL, uR, rhoR, PR, gamma=1.4, model=None):
         qR = math.sqrt(1.0 + (gamma + 1.0)/(2.0*gamma)*(Pguess/PR - 1.0))
     
     # Estimate wave speeds
-    SL = uL - aL*qL
-    SR = uR + aR*qR
+    cdef double SL = uL - aL*qL
+    cdef double SR = uR + aR*qR
     
-    Sstar = PR - PL + rhoL*uL*(SL - uL) - rhoR*uR*(SR - uR)
+    cdef double Sstar = PR - PL + rhoL*uL*(SL - uL) - rhoR*uR*(SR - uR)
     Sstar /= (rhoL*(SL - uL) - rhoR*(SR - uR))
 
     # Get energy and momenta on boundaries
-    eL = PL/((gamma - 1.0)*rhoL)
-    EL = rhoL*(0.5*uL*uL + eL)
-    momL = uL*rhoL
+    cdef double eL = PL/((gamma - 1.0)*rhoL)
+    cdef double EL = rhoL*(0.5*uL*uL + eL)
+    cdef double momL = uL*rhoL
 
-    eR = PR/((gamma - 1.0)*rhoR)
-    ER = rhoR*(0.5*uR*uR + eR)
-    momR = uR*rhoR
+    cdef double eR = PR/((gamma - 1.0)*rhoR)
+    cdef double ER = rhoR*(0.5*uR*uR + eR)
+    cdef double momR = uR*rhoR
+    
+    cdef double f_rho, f_mom, f_E
+    
+    cdef double PLR, d, fL_rho, fL_mom, fL_E, fR_rho, fR_mom, fR_E
     
     # Get flux   
     if 0 <= SL:

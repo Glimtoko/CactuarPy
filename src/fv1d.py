@@ -1,13 +1,14 @@
 import numpy
 
 import set_mesh 
-import main_loop
-import get_flux
+import core
 import riemann_solvers as rs
+
+import matplotlib.pyplot as plot
 
 # Problem specification
 problem = "sod"
-ncells = 100
+ncells = 1000
 invert = False
 dtinit = 0.1
 
@@ -19,7 +20,7 @@ length = 1.0
 interface_position = 0.5
 
 # Solver settings
-flux_function = get_flux.get_flux_HLLC
+flux_function = core.get_flux_HLLC
 riemann_solver = None
 
 
@@ -32,7 +33,7 @@ rho, momentum, E, P, u, cx, tend, dx = set_mesh.set_mesh(
     invert=invert
 )
 
-main_loop.main_loop(
+core.main_loop(
     rho,
     P,
     u,
@@ -49,6 +50,15 @@ main_loop.main_loop(
 ein = numpy.zeros(len(rho))
 for i in range(len(rho)):
     ein[i] = E[i]/rho[i] - 0.5*u[i]*u[i]
+    
+    
+#plot.plot(x, exact.rho, "k", label="Exact (iterative Riemann solve)")
+plot.scatter(cx, rho, s=2.0)
+plot.title(r"$\rho$")
+plot.xlabel("x (cm)")
+
+plot.savefig("test.png")
+    
 
 # results[flux] = {
 #     "X": copy.deepcopy(cx),
