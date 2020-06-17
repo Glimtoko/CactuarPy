@@ -132,3 +132,4 @@ dmypy.json
 # Other stuff
 *.html
 *.png
+*.dat

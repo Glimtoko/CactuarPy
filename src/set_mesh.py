@@ -12,6 +12,15 @@ def set_mesh(problem, gamma=1.4, L=1.0, x0=0.5, ncells=100, invert=False):
         PR = 0.1
         tend = 0.25
         problem = "Sod Shock Tube"
+    elif problem.upper() == "SOD20":
+        uL = 0.0
+        uR = 0.0    
+        rhoL = 1.0
+        rhoR = 0.125
+        PL = 1.0
+        PR = 0.1
+        tend = 0.2
+        problem = "Sod Shock Tube - 0.2s"
     elif problem == "123":
         rhoL = 1.0
         uL = -2.0

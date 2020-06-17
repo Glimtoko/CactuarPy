@@ -1,16 +1,16 @@
 import time
 
 import numpy
-import matplotlib.pyplot as plot
 
 import set_mesh 
 import core
 
 # Problem specification
-problem = "sod"
-ncells = 1000
+problem = "sod20"
+ncells = 250
 invert = False
 dtinit = 0.1
+output = "result_{}.dat".format(problem)
 
 # EoS
 gamma = 1.4
@@ -55,10 +55,7 @@ ein = numpy.zeros(len(rho))
 for i in range(len(rho)):
     ein[i] = E[i]/rho[i] - 0.5*u[i]*u[i]
     
-    
-#plot.plot(x, exact.rho, "k", label="Exact (iterative Riemann solve)")
-plot.scatter(cx, rho, s=2.0)
-plot.title(r"$\rho$")
-plot.xlabel("x (cm)")
 
-plot.savefig("test.png")
+with open(output, "w") as ofile:
+    for i in range(len(rho)):
+        ofile.write("{} {} {} {} {} {}\n".format(i, cx[i], rho[i], P[i], u[i], ein[i]))
