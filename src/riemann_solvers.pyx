@@ -194,7 +194,7 @@ def solve(
     
     cdef double rhoxp, Pxp, uxp
     if model == riemann_iterative:
-        rhoxp, Pxp, uxp = sample_exact(Pstar, ustar, x, t, uL, rhoL, PL, uR, rhoR, PR, gamma)
+        rhoxp, Pxp, uxp = sample_approx(Pstar, ustar, 0.0, 0.0, uL, rhoL, PL, uR, rhoR, PR, gamma, exact=True)
     else:
         rhoxp, Pxp, uxp = sample_approx(Pstar, ustar, rhoLstar, rhoRstar, uL, rhoL, PL, uR, rhoR, PR, gamma)
     
